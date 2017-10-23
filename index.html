@@ -25,16 +25,45 @@
         <script src="https://code.jquery.com/jquery-1.11.1.js"></script>
         <script>
             $(function () {
-                var socket = io();
+                const socket = io();
+                let clientNickname;
+                let users = [];
+                
+            // EVENT 'chat message'
+                // emiting 'chat message' event, clearing input
                 $('form').submit(function () {
                     socket.emit('chat message', $('#m').val());
                     $('#m').val('');
                     return false;
                 });
-                socket.on('chat message', function(msg) {
-                    $('#messages').append($('<li>').text(msg));
+                
+                // rendering message
+                socket.on('chat message', function(msg, serverNickname) {
+                    $('#messages').append(serverNickname);
+                    $('#messages').append($('<li>').text(msg)); 
                 });
+                
+                
+            // EVENT 'set nickname'
+                // asking user for nickname
+                socket.emit('set nickname', prompt('What is your nickname?'));
+                // taking user's nickname to app
+                socket.on('nickname ready', function(nickname) {
+                    $('#m').val(nickname);
+                    clientNickname = nickname;
+                });
+                
             }); 
+            
+//            var socketOne = io.connect('http://localhost');
+
+//            socket.on('connect', function () {
+//                socket.emit('set nickname', prompt('What is your nickname?'));
+//                socket.on('ready', function () {
+//                    console.log('Connected !');
+//                    socket.emit('msg', prompt('What is your message?'));
+//                });
+//            });
         </script>
     </body>
 </html>
