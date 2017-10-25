@@ -2,56 +2,52 @@ var app = require('express')();
 var http = require('http').Server(app);
 var io = require('socket.io')(http);
 
-var serverNickname;
+//var userNickname;
 
+var usersNameList = new Array();
 
 app.get('/', function(req, res){
     res.sendFile(__dirname + '/index.html');
 });
 
 io.on('connection', function(socket){
-   console.log('a user connected');
     
-    // user disconnetion
-    socket.on('disconnect', function() {
-        console.log('user disconnected');
+    var usersIdList = Object.keys(io.sockets.sockets);
+    //user connected
+   console.log('a user connected');
+    console.log(usersIdList);
+    console.log(socket.id);
+    // user disconnected
+    socket.on('disconnect', function(usersNameList, usersNameList) {
+        let pos = usersIdList.indexOf(socket.id);
+//        var removed = usersNameList.splice(pos, 1);
+//        usersIdList = usersIdList.splice(pos, 1);
+        
+        console.log(socket.nickname + ' disconnected' + usersNameList + usersIdList);
+        io.emit('user disconnected', usersNameList)
     });
     
-    //user message to console
-    socket.on('chat message', function(msg){
-        console.log('message: ' +msg);
+    // Nickname setting
+    socket.on('set nickname', function(nickname){
+        socket.nickname = nickname;
+        
+        // tutaj jakas petla by sie przydala, zeby sprawdzic rownosc id, bo ktos moze sie polaczyc, ale nie wpisac imienia
+        if(usersIdList[usersIdList.length-1] == socket.id){
+            usersNameList.push(socket.nickname);
+        }
+        console.log(usersNameList);
+        console.log('Connected: ' + this.nickname);
+        io.emit('nickname ready', socket.nickname, usersNameList);
     });
     
     //user message to render
-    socket.on('chat message', function(msg, serverNickname){
-        serverNickname = socket.nickname;
-        io.emit('chat message', msg, serverNickname);
+    socket.on('chat message', function(msg){
+        console.log('message by ' + socket.nickname + ': ' + msg);
+        io.emit('chat message', msg, socket.nickname);
     });
     
-    socket.on('set nickname', function(nickname){
-        
-        socket.nickname = nickname;
-        serverNickname = socket.nickname;
-        console.log('nazwa: ' + this.nickname);
-        io.emit('nickname ready', serverNickname);
-    });
+    
 });
-
-
-/////////////////////
-//io.listen(80).sockets.on('connection', function (socket) {
-//    socket.on('set nickname', function (name) {
-//        socket.set('nickname', name, function () { socket.emit('ready'); });
-//    });
-//
-//    socket.on('msg', function () {
-//        socket.get('nickname', function (err, name) {
-//            console.log('Chat message by ', name);
-//        });
-//    });
-//});
-
-/////////////
 
 
 http.listen('3000', function(){

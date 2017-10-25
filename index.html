@@ -11,6 +11,14 @@
             #messages { list-style-type: none; margin: 0; padding: 0; }
             #messages li { padding: 5px 10px; }
             #messages li:nth-child(odd) { background: #eee; }
+            .users-list{
+                width: 150px;
+                height: 150px;
+                background-color: aqua;
+                position: absolute;
+                top: 10px;
+                right: 10px;
+            }
         </style>
     </head>
     <body>
@@ -19,15 +27,28 @@
             <input id="m" autocomplete="off" /><button>Send!</button>
         </form>
         
+        <div class="users-list">
+            <ul id="available-users"></ul>
+        </div>
         
         
         <script src="/socket.io/socket.io.js"></script>
         <script src="https://code.jquery.com/jquery-1.11.1.js"></script>
-        <script>
+        
+        
+<!--    /////////////------------JS----------------//////-->
+        <script>    
             $(function () {
                 const socket = io();
-                let clientNickname;
-                let users = [];
+                  
+                // updating available users list
+                function updateAvailableUsers(nicknameList){
+                    $('#available-users').empty();
+                    for(let i = 0; i < nicknameList.length; i++) {
+                        console.log(nicknameList[i]);
+                        $('#available-users').append($('<li>').text(nicknameList[i]));
+                    }
+                }
                 
             // EVENT 'chat message'
                 // emiting 'chat message' event, clearing input
@@ -38,9 +59,9 @@
                 });
                 
                 // rendering message
-                socket.on('chat message', function(msg, serverNickname) {
-                    $('#messages').append(serverNickname);
-                    $('#messages').append($('<li>').text(msg)); 
+                socket.on('chat message', function(msg, nickname) {
+
+                    $('#messages').append($('<li>').text(nickname+ ": " + msg));
                 });
                 
                 
@@ -48,22 +69,20 @@
                 // asking user for nickname
                 socket.emit('set nickname', prompt('What is your nickname?'));
                 // taking user's nickname to app
-                socket.on('nickname ready', function(nickname) {
-                    $('#m').val(nickname);
-                    clientNickname = nickname;
+                socket.on('nickname ready', function(nickname, nicknameList) {
+                    // updating available users list
+                    updateAvailableUsers(nicknameList);
+                    console.log(nicknameList);
+                });
+                
+                
+          // EVENT 'user disconnected'
+                socket.on('user disconnected', function(nicknameList){
+//                    updateAvailableUsers(nicknameList);
                 });
                 
             }); 
             
-//            var socketOne = io.connect('http://localhost');
-
-//            socket.on('connect', function () {
-//                socket.emit('set nickname', prompt('What is your nickname?'));
-//                socket.on('ready', function () {
-//                    console.log('Connected !');
-//                    socket.emit('msg', prompt('What is your message?'));
-//                });
-//            });
         </script>
     </body>
 </html>
